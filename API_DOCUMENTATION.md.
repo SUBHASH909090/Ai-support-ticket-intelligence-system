@@ -1,0 +1,97 @@
+# API Documentation
+
+## 1. Overview
+
+The AI Support Ticket Intelligence System receives customer support tickets through an n8n webhook and analyses them using Google Gemini.
+
+## 2. API Endpoint
+
+**HTTP Method:** POST
+
+**Endpoint:** `/webhook/support-ticket`
+
+**Content-Type:** `application/json`
+
+The full production webhook URL must be configured from the n8n workflow.
+
+## 3. Request Schema
+
+```json
+{
+  "ticket_id": "TICKET-001",
+  "message": "I cannot log in to my account."
+}
+```
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| ticket_id | String | Yes | Unique ticket identifier |
+| message | String | Yes | Customer support message |
+
+Maximum message length: 500 characters.
+
+## 4. Successful Response
+
+```json
+{
+  "category": "Account Issue",
+  "priority": "High",
+  "sentiment": "Negative",
+  "summary": "The customer cannot access their account.",
+  "suggested_action": "Verify the customer's identity and assist with account recovery."
+}
+```
+
+## 5. Output Fields
+
+| Field | Possible Values |
+|---|---|
+| category | Billing, Technical Issue, Account Issue, Feature Request, General Query |
+| priority | Low, Medium, High, Critical |
+| sentiment | Positive, Neutral, Negative |
+| summary | Text |
+| suggested_action | Text |
+
+## 6. Invalid Request Example
+
+Request:
+
+```json
+{
+  "ticket_id": "TICKET-002",
+  "message": ""
+}
+```
+
+Response:
+
+```json
+{
+  "success": false,
+  "error": "Invalid request",
+  "message": "Both ticket_id and message are required and cannot be empty."
+}
+```
+
+## 7. Example cURL Request
+
+Replace the URL with your active production webhook URL.
+
+```bash
+curl -X POST "YOUR_PRODUCTION_WEBHOOK_URL" \
+-H "Content-Type: application/json" \
+-d "{\"ticket_id\":\"TICKET-001\",\"message\":\"I cannot log in to my account.\"}"
+```
+
+## 8. Data Storage
+
+The workflow stores the original ticket and its AI-generated analysis in an n8n Data Table.
+
+Stored fields include ticket ID, original message, category, priority, sentiment, summary, suggested action, and creation time.
+
+## 9. Important Notes
+
+- The production webhook must be active before requests can be processed.
+- Google Gemini credentials must be configured in n8n.
+- Invalid requests are handled through the workflow's validation branch.
+- AI output is structured using an n8n Structured Output Parser.
